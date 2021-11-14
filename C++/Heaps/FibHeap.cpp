@@ -107,7 +107,7 @@ class FibHeap
         }
 
         /**
-         *
+         * Function that consolidates the root list by combining binomial tress of the same rank.
          */
         void consolidate()
         {
@@ -241,11 +241,174 @@ class FibHeap
         }
 
         /**
+         * Funcition to help copy a FibHeap object. Will create a node's sibling, then recursively
+         * create it's own children/siblings.
+         *
+         * @param[in] p_parent
+         * @param[in] p_left_sibling
+         * @param[in] node_to_copy
+         */
+        Node * copy_sibling(Node * p_parent, Node * p_left_sibling, Node * node_to_copy)
+        {
+            // Return NULL if there is no more nodes to copy
+            if (node_to_copy == NULL)
+            {
+                return NULL;
+            }
+
+            // Creat the new node and set it's variables
+            Node * new_node = new Node;
+            new_node->key            = node_to_copy->key;
+            new_node->rank           = node_to_copy->rank;
+            new_node->p_parent       = p_parent;
+            new_node->p_left_sibling = p_left_sibling;
+
+            new_node->p_left_child    = copy_child(new_node, node_to_copy->p_left_child);
+            new_node->p_right_sibling = copy_sibling(p_parent, new_node, node_to_copy->p_right_sibling);
+
+            return new_node;
+        }
+
+        /**
+         *
+         */
+        Node * copy_child(Node * p_parent, Node * node_to_copy)
+        {
+            // Return NULL is there are no more nodes to copy
+            if (node_to_copy == NULL)
+            {
+                return NULL;
+            }
+
+            Node * new_node          = new Node;
+            new_node->key            = node_to_copy->key;
+            new_node->rank           = node_to_copy->rank;
+            new_node->p_parent       = p_parent;
+            new_node->p_left_sibling = NULL;
+
+            new_node->p_left_child    = copy_child(new_node, node_to_copy->p_left_child);
+            new_node->p_right_sibling = copy_sibling(p_parent, new_node, node_to_copy->p_right_sibling);
+
+            return new_node;
+        }
+
+        /**
+         * Copy Constructor for the FibHeap class.
+         *
+         * @param[in] obj_being_copied A reference to the FibHeap object that is being copied over.
+         */
+        FibHeap(const FibHeap &obj_being_copied)
+        {
+            Node * node_to_copy = obj_being_copied.p_head_root_list;
+            length_root_list = obj_being_copied.length_root_list;
+
+            // Variable that will store the revious root list node in order to
+            Node * previous_node = NULL;
+
+            // Loop through each node in the root list
+            for (int idx = 0; idx < obj_being_copied.length_root_list; idx++)
+            {
+                // Initialize the root nodes values
+                Node * new_root_node    = new Node;
+                new_root_node->key      = node_to_copy->key;
+                new_root_node->rank     = node_to_copy->rank;
+                new_root_node->p_parent = NULL;
+
+                if (previous_node != NULL)
+                {
+                    // Link the two root list nodes
+                    previous_node->p_right_sibling = new_root_node;
+                    new_root_node->p_left_sibling  = previous_node;
+                }
+                else
+                {
+                    // The current node is the head and will be linked later
+                    // once the tail has been created
+                    new_root_node->p_left_sibling = NULL;
+                }
+
+                new_root_node->p_left_child = copy_child(new_root_node, node_to_copy->p_left_child);
+
+                // Set the head of the root list
+                if (node_to_copy == obj_being_copied.p_head_root_list)
+                {
+                    p_head_root_list = new_root_node;
+                }
+
+                // Set the tail of the root list
+                if (node_to_copy == obj_being_copied.p_tail_root_list)
+                {
+                    p_tail_root_list = new_root_node;
+                }
+
+                // Set the minimum value of the root list
+                if (node_to_copy == obj_being_copied.p_minimum_value)
+                {
+                    p_minimum_value = new_root_node;
+                }
+
+                // Store the new node as the previous node
+                previous_node = new_root_node;
+
+                // Update the node to copy to the next node in the root list
+                node_to_copy = node_to_copy->p_right_sibling;
+            }
+
+            // Link the head and tail of the root list
+            p_head_root_list->p_left_sibling  = p_tail_root_list;
+            p_tail_root_list->p_right_sibling = p_head_root_list;
+        }
+
+        /**
+         * Copy assignment operator for the Treap class.
+         *
+         * @param[in] obj_being_copied A reference to the FibHeap object that is being copied over.
+         */
+        FibHeap& operator=(const FibHeap &obj_being_copied)
+        {
+
+        }
+
+        /**
+         * Helper function for the destructor of the FibHeap class.
+         */
+        void deallocate(Node * current_node)
+        {
+            if ((NULL != current_node) && (current_node->p_parent != NULL))
+            {
+                deallocate(current_node->p_left_child);
+                deallocate(current_node->p_right_sibling);
+
+                delete current_node;
+            }
+        }
+
+        /**
          * Destructor for the FibHeap class.
          */
         ~FibHeap()
         {
+            // Start at the head of the root list
+            Node * current_node = p_head_root_list;
 
+            do
+            {
+                if (NULL != current_node->p_left_child)
+                {
+                    // Frees the memory allocated by the root list nodes children
+                    deallocate(current_node->p_left_child);
+                }
+
+                // Store a pointer to the current node
+                Node * p_temp_node = current_node;
+
+                // Update the current root list node
+                current_node = current_node->p_right_sibling;
+
+                // Free the memory allocated by the previous current node
+                delete p_temp_node;
+
+            } while (current_node != p_head_root_list);
         }
 
         /**
@@ -369,6 +532,9 @@ class FibHeap
          */
         void merge(FibHeap<keytype> &H2)
         {
+            // Update the length of the root list
+            length_root_list += H2.length_root_list;
+
             // Connect the tail of H1 with the head of H2
             p_tail_root_list->p_right_sibling = H2.p_head_root_list;
             H2.p_head_root_list->p_left_sibling = p_tail_root_list;
@@ -426,9 +592,16 @@ class FibHeap
                 current_node = current_node->p_right_sibling;
 
             } while (current_node != p_head_root_list);
-
         }
 };
+
+void copy_test(FibHeap<int> test)
+{
+    cout << "Testing copy constructor:\n";
+    cout << test.extractMin() << endl;
+
+    test.printKey();
+}
 
 int main()
 {
@@ -451,8 +624,8 @@ int main()
      * B3
      * 1 2 7 10 6 9 11 5
      */
-    //cout << "Printing Fibonacci Heap:\n";
-    //H1.printKey();
+    cout << "Printing Fibonacci Heap:\n";
+    H1.printKey();
 
     // Should output 1
     cout << "Extracting min:\n";
@@ -466,8 +639,8 @@ int main()
      * B3
      * 2 3 9 11 4 7 10 6
      */
-    //cout << "Printing Fibonacci Heap:\n";
-    //H1.printKey();
+    cout << "Printing Fibonacci Heap:\n";
+    H1.printKey();
 
     /**
      * Should output
@@ -487,8 +660,9 @@ int main()
     H1.insert(15);
     H1.insert(19);
     H1.insert(22);
-    //H1.printKey();
+    H1.printKey();
 
+    #if 0
     // Should output 2
     cout << "Extracting min:\n";
     cout << H1.extractMin() << endl;
@@ -497,12 +671,15 @@ int main()
      * Should output
      *
      * B2
-     * 6 15 19 22
+     * 6 19 22 15
      * B3
      * 3 5 7 10 8 9 11 4
      */
     cout << "Printing Fibonacci Heap:\n";
     H1.printKey();
+    #endif
+
+    copy_test(H1);
     #endif
 
     return 0;
