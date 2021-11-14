@@ -61,10 +61,7 @@ class FibHeap
         /**
          * Default constructor for the FibHeap class.
          */
-        FibHeap()
-        {
-
-        }
+        FibHeap() { }
 
         /**
          * Removes y from the root and makes it the leftmost child of x
@@ -241,12 +238,14 @@ class FibHeap
         }
 
         /**
-         * Funcition to help copy a FibHeap object. Will create a node's sibling, then recursively
+         * Function to help copy a FibHeap object. Will create a node's sibling, then recursively
          * create it's own children/siblings.
          *
-         * @param[in] p_parent
-         * @param[in] p_left_sibling
-         * @param[in] node_to_copy
+         * @param[in] p_parent       A pointer to the newly created node's parent.
+         * @param[in] p_left_sibling A pointer to the newly created node's left sibling.
+         * @param[in] node_to_copy   A pointer to the node that is being copied.
+         *
+         * @return A pointer to the newly created sibling.
          */
         Node * copy_sibling(Node * p_parent, Node * p_left_sibling, Node * node_to_copy)
         {
@@ -256,21 +255,28 @@ class FibHeap
                 return NULL;
             }
 
-            // Creat the new node and set it's variables
+            // Create the new sibling node
             Node * new_node = new Node;
             new_node->key            = node_to_copy->key;
             new_node->rank           = node_to_copy->rank;
             new_node->p_parent       = p_parent;
             new_node->p_left_sibling = p_left_sibling;
 
-            new_node->p_left_child    = copy_child(new_node, node_to_copy->p_left_child);
-            new_node->p_right_sibling = copy_sibling(p_parent, new_node, node_to_copy->p_right_sibling);
+            // Recursively create the newly created node's children/siblings
+            new_node->p_left_child    = this->copy_child(new_node, node_to_copy->p_left_child);
+            new_node->p_right_sibling = this->copy_sibling(p_parent, new_node, node_to_copy->p_right_sibling);
 
             return new_node;
         }
 
         /**
+         * Function to help copy a FibHeap object. Will create a node's leftmost child, then recursively
+         * create the newly created node's own children/siblings.
          *
+         * @param[in] p_parent     A pointer to the newly create node's parent.
+         * @param[in] node_to_copy A pointer to the node that is being copied.
+         *
+         * @return A pointer to the newly created child.
          */
         Node * copy_child(Node * p_parent, Node * node_to_copy)
         {
@@ -280,24 +286,26 @@ class FibHeap
                 return NULL;
             }
 
+            // Create the new child node
             Node * new_node          = new Node;
             new_node->key            = node_to_copy->key;
             new_node->rank           = node_to_copy->rank;
             new_node->p_parent       = p_parent;
             new_node->p_left_sibling = NULL;
 
-            new_node->p_left_child    = copy_child(new_node, node_to_copy->p_left_child);
-            new_node->p_right_sibling = copy_sibling(p_parent, new_node, node_to_copy->p_right_sibling);
+            // Recursively create the newly created node's children/sibling
+            new_node->p_left_child    = this->copy_child(new_node, node_to_copy->p_left_child);
+            new_node->p_right_sibling = this->copy_sibling(p_parent, new_node, node_to_copy->p_right_sibling);
 
             return new_node;
         }
 
         /**
-         * Copy Constructor for the FibHeap class.
+         * Function to copy a FibHeap object.
          *
-         * @param[in] obj_being_copied A reference to the FibHeap object that is being copied over.
+         * @param[in] obj_being_copied A reference to the FibHeap object that is being copied.
          */
-        FibHeap(const FibHeap &obj_being_copied)
+        void copy_fib_heap(const FibHeap &obj_being_copied)
         {
             Node * node_to_copy = obj_being_copied.p_head_root_list;
             length_root_list = obj_being_copied.length_root_list;
@@ -327,7 +335,7 @@ class FibHeap
                     new_root_node->p_left_sibling = NULL;
                 }
 
-                new_root_node->p_left_child = copy_child(new_root_node, node_to_copy->p_left_child);
+                new_root_node->p_left_child = this->copy_child(new_root_node, node_to_copy->p_left_child);
 
                 // Set the head of the root list
                 if (node_to_copy == obj_being_copied.p_head_root_list)
@@ -360,13 +368,33 @@ class FibHeap
         }
 
         /**
+         * Copy Constructor for the FibHeap class.
+         *
+         * @param[in] obj_being_copied A reference to the FibHeap object that is being copied over.
+         */
+        FibHeap(const FibHeap &obj_being_copied)
+        {
+            this->copy_fib_heap(obj_being_copied);
+        }
+
+        /**
          * Copy assignment operator for the Treap class.
          *
          * @param[in] obj_being_copied A reference to the FibHeap object that is being copied over.
          */
         FibHeap& operator=(const FibHeap &obj_being_copied)
         {
+            // If the FibHeap is not empty, delete it before continuing
+            if (NULL != p_head_root_list)
+            {
+                this->deallocate_fib_heap();
+            }
 
+            // Copy the FibHeap
+            this->copy_fib_heap(obj_being_copied);
+
+            // Retturn a reference to the new object
+            return *this;
         }
 
         /**
@@ -376,27 +404,28 @@ class FibHeap
         {
             if ((NULL != current_node) && (current_node->p_parent != NULL))
             {
-                deallocate(current_node->p_left_child);
-                deallocate(current_node->p_right_sibling);
+                this->deallocate(current_node->p_left_child);
+                this->deallocate(current_node->p_right_sibling);
 
                 delete current_node;
             }
         }
 
         /**
-         * Destructor for the FibHeap class.
+         * Function to delete a FibHeap object.
          */
-        ~FibHeap()
+        void deallocate_fib_heap()
         {
             // Start at the head of the root list
             Node * current_node = p_head_root_list;
 
+            // Delete each root node's binomial tree
             do
             {
                 if (NULL != current_node->p_left_child)
                 {
                     // Frees the memory allocated by the root list nodes children
-                    deallocate(current_node->p_left_child);
+                    this->deallocate(current_node->p_left_child);
                 }
 
                 // Store a pointer to the current node
@@ -409,6 +438,14 @@ class FibHeap
                 delete p_temp_node;
 
             } while (current_node != p_head_root_list);
+        }
+
+        /**
+         * Destructor for the FibHeap class.
+         */
+        ~FibHeap()
+        {
+            this->deallocate_fib_heap();
         }
 
         /**
@@ -554,15 +591,17 @@ class FibHeap
         }
 
         /**
+         * Function to recursivley traverse a binomial tree in the FibHeap.
          *
+         * @param[in] current_node The current node in the preorder traversal.
          */
         void preorder_implementation(Node * current_node)
         {
             if ((NULL != current_node) && (current_node->p_parent != NULL))
             {
                 cout << current_node->key << " ";
-                preorder_implementation(current_node->p_left_child);
-                preorder_implementation(current_node->p_right_sibling);
+                this->preorder_implementation(current_node->p_left_child);
+                this->preorder_implementation(current_node->p_right_sibling);
 
             }
         }
@@ -584,7 +623,7 @@ class FibHeap
 
                 if (NULL != current_node->p_left_child)
                 {
-                    preorder_implementation(current_node->p_left_child);
+                    this->preorder_implementation(current_node->p_left_child);
                 }
 
                 cout << endl;
@@ -593,94 +632,11 @@ class FibHeap
 
             } while (current_node != p_head_root_list);
         }
+
+        private:
 };
-
-void copy_test(FibHeap<int> test)
-{
-    cout << "Testing copy constructor:\n";
-    cout << test.extractMin() << endl;
-
-    test.printKey();
-}
 
 int main()
 {
-    #define LAB_EXAMPLE
-    #ifdef  LAB_EXAMPLE
-    int k[11] = { 6, 2, 10, 7, 5, 1, 11, 9, 3, 4, 8 };
-
-    FibHeap<int> H1(k, 11);
-
-    // Should output 1
-    //cout << "Getting min value: " << H1.peekKey() << endl;
-
-    /**
-     * Should output
-     *
-     * B0
-     * 8
-     * B1
-     * 3 4
-     * B3
-     * 1 2 7 10 6 9 11 5
-     */
-    cout << "Printing Fibonacci Heap:\n";
-    H1.printKey();
-
-    // Should output 1
-    cout << "Extracting min:\n";
-    cout << H1.extractMin() << endl;
-
-    /**
-     * Should output
-     *
-     * B1
-     * 5 8
-     * B3
-     * 2 3 9 11 4 7 10 6
-     */
-    cout << "Printing Fibonacci Heap:\n";
-    H1.printKey();
-
-    /**
-     * Should output
-     *
-     * B1
-     * 5 8
-     * B3
-     * 2 3 9 11 4 7 10 6
-     * B0
-     * 15
-     * B0
-     * 19
-     * B0
-     * 22
-     */
-    cout << "Inserting 15, 19, and 22\n";
-    H1.insert(15);
-    H1.insert(19);
-    H1.insert(22);
-    H1.printKey();
-
-    #if 0
-    // Should output 2
-    cout << "Extracting min:\n";
-    cout << H1.extractMin() << endl;
-
-    /**
-     * Should output
-     *
-     * B2
-     * 6 19 22 15
-     * B3
-     * 3 5 7 10 8 9 11 4
-     */
-    cout << "Printing Fibonacci Heap:\n";
-    H1.printKey();
-    #endif
-
-    copy_test(H1);
-    #endif
-
     return 0;
 }
