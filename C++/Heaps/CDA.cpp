@@ -7,6 +7,9 @@
  * Written by: Andrew Hankins
  */
 
+// Include guard for CDA.cpp
+#ifndef CDA_CPP
+
 #include <iostream>
 
 using namespace std;
@@ -1192,3 +1195,7 @@ class CDA
             cout << endl;
         }
 };
+
+// End of include guard for CDA_CPP
+#define CDA_CPP
+#endif

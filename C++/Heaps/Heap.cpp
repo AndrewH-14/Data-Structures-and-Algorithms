@@ -182,11 +182,11 @@ class Heap
             if (insert_index > 0)
             {
                 min_key = heap_arr[0];
-                heap_arr.DelEnd();
                 insert_index--;
                 heap_arr[0] = heap_arr[insert_index];
                 bool b_continue = true;
                 int current_index = 0;
+                heap_arr.DelEnd();
 
                 /**
                  * Loop through the heap until no more order vioaltions are found
@@ -296,33 +296,3 @@ class Heap
             cout << endl;
         }
 };
-
-int main(void)
-{
-
-    // #define TEST1
-    #ifdef  TEST1
-    Heap<int> A;
-
-    A.insert(6);
-    A.insert(2);
-    A.insert(10);
-    A.insert(7);
-    A.insert(5);
-    A.insert(1);
-    A.insert(11);
-    A.insert(9);
-    A.insert(3);
-    A.insert(4);
-    A.insert(8);
-    #endif
-
-    #define TEST2
-    #ifdef TEST2
-    int arr[] = { 6, 2, 10, 7, 5, 1, 11, 9, 3, 4, 8 };
-    Heap<int> B(arr, 11);
-    Heap<int> C = B;
-    B.printKey();
-    C.printKey();
-    #endif
-}
