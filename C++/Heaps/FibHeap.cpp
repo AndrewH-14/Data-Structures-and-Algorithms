@@ -147,32 +147,96 @@ class FibHeap
         }
 
         /**
-         * Removes the minimum key in the heap and returns the key.
+         * Removes the minimum key in the Fibonacci Heap and returns the key.
          *
-         * @return The minimum key.
+         * @return The minimum key in the heap.
          */
         keytype extractMin()
         {
-            // Get the minimum key in the Heap to return
-            keytype minimum_key = p_minimum_value->key;
+            // Store the minimum value in the FibHeap to be returned
+            keytype min_key = p_minimum_value->key;
 
-            // Move min's children to the root list
-            if (p_minimum_value->p_left_child != NULL)
+            // If the node that is being removed has children
+            if ((p_minimum_value->p_left_child != NULL) && (length_root_list > 1))
             {
-                p_minimum_value->p_left_sibling->p_right_sibling = p_minimum_value->p_left_child;
-                p_minimum_value->p_left_child->p_left_sibling = p_minimum_value->p_left_sibling;
+                if (p_head_root_list == p_minimum_value)
+                {
+                    // Removes the minumum key from the root list and updates
+                    // the head of the root list
+                    p_head_root_list = p_minimum_value->p_right_sibling;
+                    p_head_root_list->p_left_sibling = p_tail_root_list;
+                    p_tail_root_list->p_right_sibling = p_head_root_list;
+                }
+                else if (p_tail_root_list == p_minimum_value)
+                {
+                    // Removes the minimum key from the root list and updates
+                    // the tail of the root list
+                    p_tail_root_list = p_minimum_value->p_left_sibling;
+                    p_tail_root_list->p_right_sibling = p_head_root_list;
+                    p_head_root_list->p_left_sibling  = p_tail_root_list;
+                }
+                else
+                {
+                    // Remove the minimum value node from the root list and relink it
+                    p_minimum_value->p_left_sibling->p_right_sibling = p_minimum_value->p_right_sibling;
+                    p_minimum_value->p_right_sibling->p_left_sibling = p_minimum_value->p_left_sibling;
+                }
 
+                // Get the start of the list of children
                 Node * p_current_node = p_minimum_value->p_left_child;
 
-                // Loop until the last child is reached, then link it with the root list
+                p_tail_root_list->p_right_sibling = p_current_node;
+                p_current_node->p_left_sibling    = p_tail_root_list;
+
+                while (1)
+                {
+                    p_current_node->p_parent = NULL;
+
+                    // The end of the sibling list has been reached
+                    if (p_current_node->p_right_sibling == NULL)
+                    {
+                        // The rightmost child is the now the new tail
+                        p_tail_root_list = p_current_node;
+
+                        // Link the head and the tail back together
+                        p_tail_root_list->p_right_sibling = p_head_root_list;
+                        p_head_root_list->p_left_sibling  = p_tail_root_list;
+                        break;
+                    }
+
+                    // Increment the length for all but the last node, to account for the
+                    // minimum being extracted.
+                    p_current_node = p_current_node->p_right_sibling;
+                    length_root_list++;
+                }
+
+                // Delete the minimum key
+                delete p_minimum_value;
+                p_minimum_value = NULL;
+
+                // Consolidate the current root list
+                this->consolidate();
+            }
+            else if ((p_minimum_value->p_left_child != NULL) && (length_root_list == 1))
+            {
+                // Get the start of the list of children
+                Node * p_current_node = p_minimum_value->p_left_child;
+
+                p_head_root_list = p_current_node;
+                p_tail_root_list = NULL;
+
                 while (1)
                 {
                     p_current_node->p_parent = NULL;
 
                     if (p_current_node->p_right_sibling == NULL)
                     {
-                        p_current_node->p_right_sibling = p_minimum_value->p_right_sibling;
-                        p_minimum_value->p_right_sibling->p_left_sibling = p_current_node;
+                        // The rightmost child if now the new tail
+                        p_tail_root_list = p_current_node;
+
+                        // Link the head and tail back together
+                        p_tail_root_list->p_right_sibling;
+                        p_head_root_list->p_left_sibling;
                         break;
                     }
 
@@ -180,44 +244,58 @@ class FibHeap
                     length_root_list++;
                 }
 
-                // Update the head/tail of the root list if necessary
-                if (p_minimum_value == p_head_root_list)
-                {
-                    p_head_root_list = p_minimum_value->p_left_child;
-                }
-                else if (p_minimum_value == p_tail_root_list)
-                {
-                    p_tail_root_list = p_current_node;
-                }
+                // Delete the minimum key
+                delete p_minimum_value;
+                p_minimum_value = NULL;
+
+                // Consolidate the current root list
+                this->consolidate();
             }
-            else
+            else if ((p_minimum_value->p_left_child == NULL) && (length_root_list > 1))
             {
-                // Remove the minimum value node from the root list and relink it
-                p_minimum_value->p_left_sibling->p_right_sibling = p_minimum_value->p_right_sibling;
-                p_minimum_value->p_right_sibling->p_left_sibling = p_minimum_value->p_left_sibling;
-
-                // Update the head/tail of the root list if necessary
-                if (p_minimum_value == p_head_root_list)
+                if (p_head_root_list == p_minimum_value)
                 {
+                    // Removes the minumum key from the root list and updates
+                    // the head of the root list
                     p_head_root_list = p_minimum_value->p_right_sibling;
+                    p_head_root_list->p_left_sibling  = p_tail_root_list;
+                    p_tail_root_list->p_right_sibling = p_head_root_list;
                 }
-                else if (p_minimum_value == p_tail_root_list)
+                else if (p_tail_root_list == p_minimum_value)
                 {
+                    // Removes the minimum key from the root list and updates
+                    // the tail of the root list
                     p_tail_root_list = p_minimum_value->p_left_sibling;
+                    p_tail_root_list->p_right_sibling = p_head_root_list;
+                    p_head_root_list->p_left_sibling  = p_tail_root_list;
+                }
+                else
+                {
+                    // Remove the minimum value node from the root list and relink it
+                    p_minimum_value->p_left_sibling->p_right_sibling = p_minimum_value->p_right_sibling;
+                    p_minimum_value->p_right_sibling->p_left_sibling = p_minimum_value->p_left_sibling;
                 }
 
-                // One node was removed from the root list
                 length_root_list--;
+
+                // Delete the minimum key
+                delete p_minimum_value;
+                p_minimum_value = NULL;
+
+                // Consolidate the current root list
+                this->consolidate();
+            }
+            else if ((p_minimum_value->p_left_child == NULL) && (length_root_list == 1))
+            {
+                // The FibHeap is now empty, reset all the values
+                delete p_minimum_value;
+                p_head_root_list = NULL;
+                p_tail_root_list = NULL;
+                p_minimum_value  = NULL;
+                length_root_list = 0;
             }
 
-            // Delete the minimum node
-            delete p_minimum_value;
-            p_minimum_value = NULL;
-
-                // Consolidate after the min's children have been moved to the root list
-            this->consolidate();
-
-            return minimum_key;
+            return min_key;
         }
 
         /**
@@ -318,7 +396,7 @@ class FibHeap
                     this->preorder_implementation(current_node->p_left_child);
                 }
 
-                cout << endl;
+                cout << endl << endl;
 
                 current_node = current_node->p_right_sibling;
 
