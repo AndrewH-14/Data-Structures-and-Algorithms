@@ -24,7 +24,7 @@ class CDA
         int back_idx  = 0;            ///< The index of the back element of the circular array.
 
         bool b_init      = false;     ///< Used to signal if the array should be treated as initialized.
-        elmtype init_val = 0;         ///< The value that the array should be initialzed to.
+        elmtype init_val;             ///< The value that the array should be initialzed to.
         int elms_changed = 0;         ///< The number of elements that have been changed of the init array.
 
         elmtype ref_val;              ///< Reference value for the operator function
@@ -36,8 +36,9 @@ class CDA
     public:
 
         /**
-         * The default constructor, sets the arr_capacity to 1,
-         * user_size to 0.
+         * The default constructor, sets the arr_capacity to 1, and user_size to 0.
+         *
+         * Runs in O(1) time
          */
         CDA(void)
         {
@@ -138,6 +139,7 @@ class CDA
                 idx_array = NULL;
             }
 
+            // Update the local class attributes
             user_size    = obj_being_copied.user_size;
             arr_capacity = obj_being_copied.arr_capacity;
 
@@ -150,11 +152,12 @@ class CDA
 
             ref_val = obj_being_copied.ref_val;
 
+            // Initialze new arrays to be used for the deep copy
             elmtype * new_data_array  = new elmtype[arr_capacity];
             int     * new_idx_array   = new int[arr_capacity];
             int     * new_point_array = new int[arr_capacity];
 
-            // Loop through arrays and copy the data over for the arrays.
+            // Perform a deep copy of the dyanmically allocated arrays
             for (int idx = 0; idx < arr_capacity; idx++)
             {
                 new_data_array[idx] = obj_being_copied.data_array[idx];
@@ -175,13 +178,14 @@ class CDA
         }
 
         /**
-         * Copy constructor.
+         * Copy constructor for the CDA class.
          *
          * @param[in] obj_being_copied A reference to a CDA object that should be used to create a
          *                             new CDA object.
          */
         CDA(const CDA &obj_being_copied)
         {
+            // Update the local class attributes
             user_size    = obj_being_copied.user_size;
             arr_capacity = obj_being_copied.arr_capacity;
 
@@ -194,10 +198,12 @@ class CDA
 
             ref_val = obj_being_copied.ref_val;
 
+            // Initialze new arrays to be used for the deep copy
             elmtype * new_data_array  = new elmtype[arr_capacity];
             int     * new_idx_array   = new int[arr_capacity];
             int     * new_point_array = new int[arr_capacity];
 
+            // Perform a deep copy of the dynamically allocated arrays
             for (int idx = 0; idx < arr_capacity; idx++)
             {
                 new_data_array[idx] = obj_being_copied.data_array[idx];
@@ -209,6 +215,7 @@ class CDA
                 }
             }
 
+            // Set the attributes equal to the copy arrays
             data_array  = new_data_array;
             idx_array   = new_idx_array;
             point_array = new_point_array;
@@ -259,7 +266,7 @@ class CDA
         }
 
         /**
-         * Overload versin of the [] operator for the CDA class.
+         * Overload version of the [] operator for the CDA class.
          *
          * @param[in] idx The index of the array that the user wants to access.
          *
@@ -336,6 +343,7 @@ class CDA
             // Keep track of the values that have been changed and are being copied over.
             int new_elms_changed = 0;
 
+            // Copy the data over to the new array
             for (int idx = 0; idx < user_size; idx++)
             {
                 int const idx_to_copy = (front_idx + idx) % arr_capacity;
@@ -399,11 +407,13 @@ class CDA
          */
         void AddEnd(elmtype data_val)
         {
+            // If the array is full, double it
             if (user_size == arr_capacity)
             {
                 DoubleArray();
             }
 
+            // Add the element at the front index
             if (b_init)
             {
                 data_array[back_idx]      = data_val;
@@ -430,6 +440,7 @@ class CDA
          */
         void AddFront(elmtype v)
         {
+            // If the array is full, double it
             if (user_size == arr_capacity)
             {
                 DoubleArray();
@@ -438,6 +449,7 @@ class CDA
             // Update the front_idx variable
             front_idx = (front_idx - 1 + arr_capacity) % arr_capacity;
 
+            // Add the element at the front index
             if (b_init)
             {
                 data_array[front_idx]      = v;
@@ -488,6 +500,7 @@ class CDA
          */
         void HalfArray()
         {
+            // Compute the new array size
             int new_arr_capacity = (arr_capacity / 2);
 
             // Create new arrays that is half the size of the current one
@@ -502,8 +515,10 @@ class CDA
                 new_point_array = new int[new_arr_capacity];
             }
 
+            // Keep track of the values that have been changed and are being copied over.
             int new_elms_changed = 0;
 
+            // Copy the data over to the new array
             for (int idx = 0; idx < user_size; idx++)
             {
                 int const idx_to_copy = (front_idx + idx) % arr_capacity;
@@ -666,7 +681,7 @@ class CDA
 
             if ((mid_idx + 1) == ((front_idx + user_size) % arr_capacity))
             {
-                // Returning the bitwise complement of the size.
+                // No larger elemern, returning the bitwise complement of the size.
                 return ~user_size;
             }
             else
@@ -796,7 +811,7 @@ class CDA
                     }
                 }
                 k++; //< Increment the index of the temp array
-                i++; //< Increment the index for the right side of the array
+                i++; //< Increment the index for the left side of the array
             }
 
             // Fill up the temp array with values from the right half of the array
@@ -977,14 +992,9 @@ class CDA
 
             int i = start - 1;
 
-            cout << "test\n";
-
             // Compare each element in the section to the pivot element.
             for (int j = start; j <= (end - 1); j++)
             {
-                cout << (end - 1) << endl;
-                cout << j << endl;
-
                 elmtype data_val;
 
                 // Get the value to compare against the pivot element.
@@ -1029,6 +1039,7 @@ class CDA
             swap(data_array[(front_idx + i + 1) % arr_capacity],
                  data_array[(front_idx + end) % arr_capacity]);
 
+            // Returns the index of the pivot element
             return i + 1;
         }
 

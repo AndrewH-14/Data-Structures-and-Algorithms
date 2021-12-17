@@ -154,7 +154,7 @@ int main() {
 	#endif
 
 	// Test cases from lab 8
-	#if 0
+	#if 1
 	int arr[11] = { 6, 2, 10, 7, 5, 1, 11, 9, 3, 4, 8 };
 	FibHeap<int> H1(arr, 11);
 
@@ -185,7 +185,7 @@ int main() {
 	FibHeap<int> H2 = H1;
 	H2.printKey();
 
-	#if 0
+	#if 1
 	/**
 	 * B1
 	 * 5 8
